@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type ResourceError struct {
@@ -148,7 +149,9 @@ func HttpReqPostFormXML(urlString string, body []byte, headers map[string]string
 }
 
 func sendHttpReq(method, urlString, token string, data []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport) (httpStatus int, buf []byte, err error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 
 	if transport != nil {
 		client.Transport = transport
