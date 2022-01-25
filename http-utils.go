@@ -30,7 +30,7 @@ func (re *ResourceError) Error() string {
 	)
 }
 
-func HttpReqAuthXML(method, urlString, token string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+func HttpReqAuthXML(method, urlString, token string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	method = strings.TrimSpace(strings.ToUpper(method))
 
 	if headers == nil {
@@ -39,7 +39,7 @@ func HttpReqAuthXML(method, urlString, token string, body []byte, headers map[st
 		headers["Content-Type"] = "text/xml"
 	}
 
-	httpStatus, responseBody, err = sendHttpReq(method, urlString, token, body, headers, cookie, transport)
+	httpStatus, responseBody, err = sendHttpReq(method, urlString, token, body, headers, cookie, transport, timeout)
 	if err != nil {
 		return
 	}
@@ -50,7 +50,7 @@ func HttpReqAuthXML(method, urlString, token string, body []byte, headers map[st
 	return
 }
 
-func HttpReqAuthJSON(method, urlString, token string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+func HttpReqAuthJSON(method, urlString, token string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	method = strings.TrimSpace(strings.ToUpper(method))
 
 	if headers == nil {
@@ -59,7 +59,7 @@ func HttpReqAuthJSON(method, urlString, token string, body []byte, headers map[s
 		headers["Content-Type"] = "application/json"
 	}
 
-	httpStatus, responseBody, err = sendHttpReq(method, urlString, token, body, headers, cookie, transport)
+	httpStatus, responseBody, err = sendHttpReq(method, urlString, token, body, headers, cookie, transport, timeout)
 	if err != nil {
 		return
 	}
@@ -70,7 +70,7 @@ func HttpReqAuthJSON(method, urlString, token string, body []byte, headers map[s
 	return
 }
 
-func HttpReqXML(method, urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, resultStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+func HttpReqXML(method, urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, resultStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	method = strings.TrimSpace(strings.ToUpper(method))
 
 	if headers == nil {
@@ -79,7 +79,7 @@ func HttpReqXML(method, urlString string, body []byte, headers map[string]string
 		headers["Content-Type"] = "text/xml"
 	}
 
-	httpStatus, responseBody, err = sendHttpReq(method, urlString, "", body, headers, cookie, transport)
+	httpStatus, responseBody, err = sendHttpReq(method, urlString, "", body, headers, cookie, transport, timeout)
 	if err != nil {
 		return
 	}
@@ -91,7 +91,7 @@ func HttpReqXML(method, urlString string, body []byte, headers map[string]string
 	return
 }
 
-func HttpReqJSON(method, urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, resultStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+func HttpReqJSON(method, urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, resultStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	method = strings.TrimSpace(strings.ToUpper(method))
 
 	if headers == nil {
@@ -100,7 +100,7 @@ func HttpReqJSON(method, urlString string, body []byte, headers map[string]strin
 		headers["Content-Type"] = "application/json"
 	}
 
-	httpStatus, responseBody, err = sendHttpReq(method, urlString, "", body, headers, cookie, transport)
+	httpStatus, responseBody, err = sendHttpReq(method, urlString, "", body, headers, cookie, transport, timeout)
 	if err != nil {
 		return
 	}
@@ -112,14 +112,14 @@ func HttpReqJSON(method, urlString string, body []byte, headers map[string]strin
 	return
 }
 
-func HttpReqPostFormJSON(urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+func HttpReqPostFormJSON(urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	if headers == nil {
 		headers = map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 	} else {
 		headers["Content-Type"] = "application/x-www-form-urlencoded"
 	}
 
-	httpStatus, responseBody, err = sendHttpReq("POST", urlString, "", body, headers, cookie, transport)
+	httpStatus, responseBody, err = sendHttpReq("POST", urlString, "", body, headers, cookie, transport, timeout)
 	if err != nil {
 		return
 	}
@@ -129,7 +129,7 @@ func HttpReqPostFormJSON(urlString string, body []byte, headers map[string]strin
 	return
 }
 
-func HttpReqPostFormXML(urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+func HttpReqPostFormXML(urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	if headers == nil {
 		headers = map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 	} else {
@@ -138,7 +138,7 @@ func HttpReqPostFormXML(urlString string, body []byte, headers map[string]string
 		}
 	}
 
-	httpStatus, responseBody, err = sendHttpReq("POST", urlString, "", body, headers, cookie, transport)
+	httpStatus, responseBody, err = sendHttpReq("POST", urlString, "", body, headers, cookie, transport, timeout)
 	if err != nil {
 		return
 	}
@@ -148,9 +148,15 @@ func HttpReqPostFormXML(urlString string, body []byte, headers map[string]string
 	return
 }
 
-func sendHttpReq(method, urlString, token string, data []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport) (httpStatus int, buf []byte, err error) {
+func sendHttpReq(method, urlString, token string, data []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int) (httpStatus int, buf []byte, err error) {
+	defaultTimeout := 30 * time.Second //default timeout
+
+	if timeout > 0 {
+		defaultTimeout = time.Duration(timeout) * time.Second
+	}
+
 	client := &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: defaultTimeout,
 	}
 
 	if transport != nil {
