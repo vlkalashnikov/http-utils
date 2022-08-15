@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -18,6 +19,12 @@ type ResourceError struct {
 	Message  string
 	Body     interface{}
 	Err      error `json:"-"`
+}
+
+type FileItem struct {
+	Key      string
+	FileName string
+	Content  []byte
 }
 
 func (re *ResourceError) Error() string {
@@ -70,7 +77,7 @@ func HttpReqAuthJSON(method, urlString, token string, body []byte, headers map[s
 	return
 }
 
-func HttpReqXML(method, urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, resultStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+func HttpReqXML(method, urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	method = strings.TrimSpace(strings.ToUpper(method))
 
 	if headers == nil {
@@ -84,14 +91,14 @@ func HttpReqXML(method, urlString string, body []byte, headers map[string]string
 		return
 	}
 
-	if resultStruct != nil && len(responseBody) > 0 {
-		err = xml.Unmarshal(responseBody, resultStruct)
+	if responseStruct != nil && len(responseBody) > 0 {
+		err = xml.Unmarshal(responseBody, responseStruct)
 	}
 
 	return
 }
 
-func HttpReqJSON(method, urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, resultStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+func HttpReqJSON(method, urlString string, body []byte, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	method = strings.TrimSpace(strings.ToUpper(method))
 
 	if headers == nil {
@@ -105,8 +112,8 @@ func HttpReqJSON(method, urlString string, body []byte, headers map[string]strin
 		return
 	}
 
-	if resultStruct != nil && len(responseBody) > 0 {
-		err = json.Unmarshal(responseBody, resultStruct)
+	if responseStruct != nil && len(responseBody) > 0 {
+		err = json.Unmarshal(responseBody, responseStruct)
 	}
 
 	return
@@ -145,6 +152,76 @@ func HttpReqPostFormXML(urlString string, body []byte, headers map[string]string
 	if responseStruct != nil && len(responseBody) != 0 {
 		err = xml.Unmarshal(responseBody, responseStruct)
 	}
+	return
+}
+
+func HttpReqPostFile(urlString string, paramTexts map[string]string, paramFile FileItem, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	for k, v := range paramTexts {
+		writer.WriteField(k, v)
+	}
+
+	fileWriter, err := writer.CreateFormFile(paramFile.Key, paramFile.FileName)
+	if err != nil {
+		return
+	}
+
+	fileWriter.Write(paramFile.Content)
+
+	if headers == nil {
+		headers = map[string]string{"Content-Type": writer.FormDataContentType()}
+	} else {
+		headers["Content-Type"] = writer.FormDataContentType()
+	}
+
+	writer.Close()
+
+	httpStatus, responseBody, err = sendHttpReq("POST", urlString, "", body.Bytes(), headers, cookie, transport, timeout)
+	if err != nil {
+		return
+	}
+
+	if responseStruct != nil && len(responseBody) > 0 {
+		err = json.Unmarshal(responseBody, responseStruct)
+	}
+
+	return
+}
+
+func HttpReqAuthPostFile(urlString, token string, paramTexts map[string]string, paramFile FileItem, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	for k, v := range paramTexts {
+		writer.WriteField(k, v)
+	}
+
+	fileWriter, err := writer.CreateFormFile(paramFile.Key, paramFile.FileName)
+	if err != nil {
+		return
+	}
+
+	fileWriter.Write(paramFile.Content)
+
+	if headers == nil {
+		headers = map[string]string{"Content-Type": writer.FormDataContentType()}
+	} else {
+		headers["Content-Type"] = writer.FormDataContentType()
+	}
+
+	writer.Close()
+
+	httpStatus, responseBody, err = sendHttpReq("POST", urlString, token, body.Bytes(), headers, cookie, transport, timeout)
+	if err != nil {
+		return
+	}
+
+	if responseStruct != nil && len(responseBody) > 0 {
+		err = json.Unmarshal(responseBody, responseStruct)
+	}
+
 	return
 }
 
