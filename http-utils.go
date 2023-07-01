@@ -190,7 +190,15 @@ func HttpReqPostFile(urlString string, paramTexts map[string]string, paramFile F
 	return
 }
 
+func HttpReqAuthPutFile(urlString, token string, paramTexts map[string]string, paramFile FileItem, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+	return httpReqAuthFile("PUT", urlString, token, paramTexts, paramFile, headers, cookie, transport, timeout, responseStruct)
+}
+
 func HttpReqAuthPostFile(urlString, token string, paramTexts map[string]string, paramFile FileItem, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
+	return httpReqAuthFile("POST", urlString, token, paramTexts, paramFile, headers, cookie, transport, timeout, responseStruct)
+}
+
+func httpReqAuthFile(method, urlString, token string, paramTexts map[string]string, paramFile FileItem, headers map[string]string, cookie *http.Cookie, transport *http.Transport, timeout int, responseStruct interface{}) (httpStatus int, responseBody []byte, err error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -213,7 +221,7 @@ func HttpReqAuthPostFile(urlString, token string, paramTexts map[string]string, 
 
 	writer.Close()
 
-	httpStatus, responseBody, err = sendHttpReq("POST", urlString, token, body.Bytes(), headers, cookie, transport, timeout)
+	httpStatus, responseBody, err = sendHttpReq(method, urlString, token, body.Bytes(), headers, cookie, transport, timeout)
 	if err != nil {
 		return
 	}
